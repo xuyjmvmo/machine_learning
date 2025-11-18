@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>六都房價預測系統 - 梯度提升樹</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 自己的 CSS -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- PapaParse：讀取 CSV 用 -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- Chart.js：畫圖用 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- 主程式 -->
+  <script defer src="script.js"></script>
+</head>
+
+<body>
+  <div id="loader" class="loader-screen">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <p class="loader-main">訓練梯度提升模型中...</p>
+      <p class="loader-sub">正在建立 50 棵決策樹</p>
+    </div>
+  </div>
+
+  <div class="page-bg">
+    <div class="page-container">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">房價預測系統 - 梯度提升樹</h1>
+        <p class="header-subtitle">使用 Gradient Boosting (類似 XGBoost) 進行預測</p>
+        <p class="header-meta" id="headerMetaText">
+          已訓練 0 棵決策樹 | 每棵深度: 3 層 | 學習率: 0.1
+        </p>
+      </header>
+
+      <!-- Controls -->
+      <section class="card controls-card">
+        <div class="controls-grid">
+          <div class="control-block">
+            <label class="control-label">選擇城市</label>
+            <select id="citySelect" class="select-input">
+              <option value="台北市">台北市</option>
+              <option value="新北市">新北市</option>
+              <option value="桃園市">桃園市</option>
+              <option value="台中市">台中市</option>
+              <option value="台南市">台南市</option>
+              <option value="高雄市">高雄市</option>
+            </select>
+          </div>
+          <div class="control-block">
+            <label class="control-label">
+              預測季數：<span id="forecastLabel">8</span> 季
+            </label>
+            <input id="forecastRange" type="range" min="4" max="12" value="8" class="range-input" />
+          </div>
+        </div>
+
+        <!-- 如果你不用 Electron / window.fs，可以改用這個上傳 CSV 的方式 -->
+
+        <div class="upload-row">
+          <!--<label class="control-label">上傳檔案</label>-->
+          <input id="csvFileInput" type="file" accept=".csv" />
+        </div>
+
+      </section>
+
+      <!-- Model Performance Cards -->
+      <section class="metrics-grid">
+        <div class="metric-card metric-purple">
+          <div class="metric-label">模型準確度 (R² Score)</div>
+          <div class="metric-value" id="r2Value">--%</div>
+          <div class="metric-note">Gradient Boosting 集成學習準確率</div>
+        </div>
+        <div class="metric-card metric-pink">
+          <div class="metric-label">平均絕對誤差 (MAE)</div>
+          <div class="metric-value" id="maeValue">±-- 萬</div>
+          <div class="metric-note" id="maeTreesNote">0 棵決策樹的集成預測誤差</div>
+        </div>
+      </section>
+
+      <!-- Stats Cards -->
+      <section class="stats-grid">
+        <div class="stat-card stat-left">
+          <div class="stat-label">當前單坪價格</div>
+          <div class="stat-value" id="latestPriceValue">--</div>
+          <div class="stat-note" id="latestPricePeriod">最新一期實際價格</div>
+        </div>
+        <div class="stat-card stat-middle">
+          <div class="stat-label">預測價格</div>
+          <div class="stat-value" id="futurePriceValue">--</div>
+          <div class="stat-note" id="futurePricePeriod">-</div>
+        </div>
+        <div class="stat-card stat-right">
+          <div class="stat-label">預測變化</div>
+          <div class="stat-value" id="changeValue">--</div>
+          <div class="stat-note">相較當前價格</div>
+        </div>
+      </section>
+
+      <!-- Trend Chart -->
+      <section class="card">
+        <h2 class="section-title" id="trendTitle">歷史與預測趨勢</h2>
+        <div class="chart-wrapper">
+          <canvas id="trendChart"></canvas>
+        </div>
+        <p class="section-footnote">
+          藍色實線為歷史數據，紫色虛線為梯度提升預測，灰色線為預測信心區間
+        </p>
+      </section>
+
+      <!-- Feature Importance -->
+      <section class="card">
+        <h2 class="section-title">特徵重要性 - 決策樹最常用哪些特徵？</h2>
+        <div class="chart-wrapper">
+          <canvas id="featureChart"></canvas>
+        </div>
+        <div class="section-text">
+          <p>📊 數值代表該特徵在 50 棵決策樹中被用於分割的頻率</p>
+          <p>💡 使用率越高，表示該特徵對預測越重要</p>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <p>本預測使用梯度提升機器學習模型（Gradient Boosting Machine），類似 XGBoost 的原理</p>
+        <p>透過 50 棵決策樹的集成學習，考慮 8 個經濟指標進行預測</p>
+        <p>數據來源：2010Q1 - 2024Q4 電梯大廈交易資料</p>
+      </footer>
+    </div>
+  </div>
+</body>
+
+</html>
